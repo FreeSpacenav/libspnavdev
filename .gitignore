@@ -1,0 +1,6 @@
+*.o
+*.d
+*.swp
+libspnavdev.a
+libspnavdev.so*
+libspnavdev.dll
