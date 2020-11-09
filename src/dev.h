@@ -18,6 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef SPNAVDEV_DEVICE_H_
 #define SPNAVDEV_DEVICE_H_
 
+#include "spnavdev.h"
+
+struct axisprop {
+	char *name;
+	int minval, maxval, deadz;
+};
+
 struct spndev {
 	char *name, *path;
 	int usb_vendor, usb_product;
@@ -26,12 +33,11 @@ struct spndev {
 	void *handle;	/* Win32 handle */
 
 	int num_axes, num_buttons;
-	char **axis_name, **bn_name;
-	int *minval, *maxval;
-	int *deadz;
+	struct axisprop *aprop;
+	char **bn_name;
 	int led;
 
-	void *uptr;
+	void *uptr, *drvdata;
 
 	void (*close)(struct spndev*);
 	int (*read)(struct spndev*, union spndev_event*);
@@ -41,8 +47,8 @@ struct spndev {
 };
 
 
-struct spndev *spndev_usb_open(const char *devstr, int vend, int prod);
-struct spndev *spndev_ser_open(const char *devstr);
+int spndev_usb_open(struct spndev *dev, const char *devstr, int vend, int prod);
+int spndev_ser_open(struct spndev *dev, const char *devstr);
 
 
 #endif	/* SPNAVDEV_DEVICE_H_ */

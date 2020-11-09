@@ -1,6 +1,6 @@
 PREFIX ?= /usr/local
 
-src = src/spnavdev.c
+src = src/spnavdev.c src/serdev.o src/usbdev.o
 obj = $(src:.c=.o)
 dep = $(obj:.o=.d)
 name = spnavdev
@@ -8,7 +8,7 @@ name = spnavdev
 so_abi = 0
 so_rev = 1
 
-CFLAGS = -pedantic -Wall -g -MMD
+CFLAGS = -pedantic -Wall -g -MMD $(pic)
 
 alib = lib$(name).a
 

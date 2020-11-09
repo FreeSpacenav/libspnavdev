@@ -21,19 +21,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 struct spndev;
 
 enum {
+	SPNDEV_NONE,
 	SPNDEV_MOTION,
 	SPNDEV_BUTTON
 };
 
 struct spndev_event_motion {
 	int type;
-	int mot[6];
+	int v[6];
 	unsigned int period;
 };
 
 struct spndev_event_button {
 	int type;
-	int bnum, press;
+	int num, press;
 };
 
 union spndev_event {
@@ -70,6 +71,9 @@ int spndev_fd(struct spndev *dev);
 void *spndev_handle(struct spndev *dev);
 
 /* device operations */
+
+/* returns event type or 0, and fills the event structure */
+int spndev_pending(struct spndev *dev);
 int spndev_process(struct spndev *dev, union spndev_event *ev);
 
 int spndev_set_led(struct spndev *dev, int state);

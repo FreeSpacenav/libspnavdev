@@ -23,14 +23,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 struct spndev *spndev_open(const char *devstr)
 {
 	struct spndev *dev;
-	int vendor = -1, product = -1;
+	unsigned int vendor = 0xffffffff, product = 0xffffffff;
+
+	if(!(dev = malloc(sizeof *dev))) {
+		perror("spndev_open: failed to allocate device structure");
+		return 0;
+	}
 
 	if(!devstr || sscanf(devstr, "%x:%x", &vendor, &product) == 2) {
-		if(!(dev = spndev_usb_open(devstr, vendor, product))) {
+		if(spndev_usb_open(dev, devstr, vendor, product) == -1) {
+			free(dev);
 			return 0;
 		}
 	} else {
-		if(!(dev = spndev_ser_open(devstr))) {
+		if(spndev_ser_open(dev, devstr) == -1) {
+			free(dev);
 			return 0;
 		}
 	}
