@@ -1,4 +1,8 @@
 #include <stdio.h>
+#include <string.h>
+#include <malloc.h>
+#include <io.h>
+#include <fcntl.h>
 #include "dev.h"
 
 #if  defined(__i386__) || defined(__ia64__) || defined(WIN32) || \
@@ -30,7 +34,9 @@ struct sball {
 
 	unsigned int keystate, keymask;
 
+#ifndef _WIN32
 	struct termios saved_term;
+#endif
 	int saved_mstat;
 
 	int (*parse)(struct sball*, int, char*, int);
@@ -90,13 +96,13 @@ int spndev_ser_open(struct spndev *dev, const char *devstr)
 	char buf[128];
 	struct sball *sb = 0;
 
-	if((fd = open(devstr, O_RDWR | O_NOCTTY | O_NONBLOCK)) == -1) {
-		fprintf(stderr, "spndev_open: failed to open device: %s: %s\n", dev, strerror(errno));
+	if((fd = _open(devstr, _O_RDWR /* | O_NOCTTY | O_NONBLOCK */)) == -1) {
+		fprintf(stderr, "spndev_open: failed to open device: %s: %s\n", dev->path, strerror(errno));
 		return -1;
 	}
 	dev->fd = fd;
-	dev->path = strdup(devstr);
-	dev->usb_vendor = dev->usb_product = -1;
+	dev->path = _strdup(devstr);
+	dev->usb_vendor = dev->usb_product = 0xFFFF;
 	dev->handle = 0;
 
 	if(!(sb = calloc(1, sizeof *sb))) {
@@ -110,7 +116,7 @@ int spndev_ser_open(struct spndev *dev, const char *devstr)
 	if(stty_sball(fd, sb) == -1) {
 		goto err;
 	}
-	write(fd, "\r@RESET\r", 8);
+	_write(fd, "\r@RESET\r", 8);
 
 	if((sz = read_timeout(fd, buf, sizeof buf - 1, 2000000)) > 0 && strstr(buf, "\r@1")) {
 		/* we got a response, so it's a spaceball */
@@ -126,17 +132,17 @@ int spndev_ser_open(struct spndev *dev, const char *devstr)
 		 * a key event to find out as soon as possible if this is a 4000flx with
 		 * 12 buttons
 		*/
-		write(fd, "\rCB\rMSSV\rk\r", 11);
+		_write(fd, "\rCB\rMSSV\rk\r", 11);
 
 		sb->parse = sball_parsepkt;
-		return dev;
+		return 0;
 	}
 
 	/* try as a magellan spacemouse */
 	if(stty_mag(fd, sb) == -1) {
 		goto err;
 	}
-	write(fd, "vQ\r", 3);
+	_write(fd, "vQ\r", 3);
 
 	if((sz = read_timeout(fd, buf, sizeof buf - 1, 250000)) > 0 && buf[0] == 'v') {
 		make_printable(buf, sz);
@@ -148,15 +154,15 @@ int spndev_ser_open(struct spndev *dev, const char *devstr)
 		printf("Magellan SpaceMouse detected: %s\n", dev->name);
 
 		/* set 3D mode, not-dominant-axis, pass through motion and button packets */
-		write(fd, "m3\r", 3);
+		_write(fd, "m3\r", 3);
 
 		sb->parse = mag_parsepkt;
-		return dev;
+		return 0;
 	}
 
 err:
 	stty_restore(fd, sb);
-	close(fd);
+	_close(fd);
 	free(sb);
 	return -1;
 }
@@ -167,7 +173,7 @@ static int init_dev(struct spndev *dev, int type)
 	struct sball *sb = dev->drvdata;
 	static const char *axnames[] = {"Tx", "Ty", "Tz", "Rx", "Ry", "Rz"};
 
-	if(!(dev->name = strdup(devinfo[type].name))) {
+	if(!(dev->name = _strdup(devinfo[type].name))) {
 		return -1;
 	}
 	dev->num_axes = 6;
@@ -191,6 +197,7 @@ static int init_dev(struct spndev *dev, int type)
 	}
 
 	/* TODO setup callbacks */
+	return 0;
 }
 
 static int guess_device(const char *verstr)
@@ -249,3 +256,14 @@ static int guess_device(const char *verstr)
 	fprintf(stderr, "Please include the following version string in your bug report: \"%s\"\n", verstr);
 	return DEV_UNKNOWN;
 }
+
+static int stty_sball(int fd, struct sball* sb) { return 0; }
+static int stty_mag(int fd, struct sball* sb) { return 0; }
+static void stty_save(int fd, struct sball* sb) {}
+static void stty_restore(int fd, struct sball* sb) {}
+
+static int mag_parsepkt(struct sball* sb, int id, char* data, int len) { return 0; }
+static int sball_parsepkt(struct sball* sb, int id, char* data, int len) { return 0; }
+
+static void make_printable(char* buf, int len) {}
+static int read_timeout(int fd, char* buf, int bufsz, long tm_usec) { return 0; }
