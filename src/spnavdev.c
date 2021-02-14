@@ -23,14 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 struct spndev *spndev_open(const char *devstr)
 {
 	struct spndev *dev;
-	unsigned int vendor = 0xffffffff, product = 0xffffffff;
+	unsigned short vendor = 0xffff, product = 0xffff;
 
 	if(!(dev = malloc(sizeof *dev))) {
 		perror("spndev_open: failed to allocate device structure");
 		return 0;
 	}
 
-	if(!devstr || sscanf(devstr, "%x:%x", &vendor, &product) == 2) {
+	if(!devstr || sscanf(devstr, "%hx:%hx", &vendor, &product) == 2) {
 		if(spndev_usb_open(dev, devstr, vendor, product) == -1) {
 			free(dev);
 			return 0;
@@ -92,7 +92,7 @@ const char *spndev_axis_name(struct spndev *dev, int axis)
 	if(axis < 0 || axis >= dev->num_axes) {
 		return 0;
 	}
-	return dev->axis_name[axis];
+	return dev->aprop[axis].name;
 }
 
 int spndev_axis_min(struct spndev *dev, int axis)
@@ -100,7 +100,7 @@ int spndev_axis_min(struct spndev *dev, int axis)
 	if(axis < 0 || axis >= dev->num_axes) {
 		return 0;
 	}
-	return dev->minval[axis];
+	return dev->aprop[axis].minval;
 }
 
 int spndev_axis_max(struct spndev *dev, int axis)
@@ -108,7 +108,7 @@ int spndev_axis_max(struct spndev *dev, int axis)
 	if(axis < 0 || axis >= dev->num_axes) {
 		return 0;
 	}
-	return dev->maxval[axis];
+	return dev->aprop[axis].maxval;
 }
 
 int spndev_num_buttons(struct spndev *dev)

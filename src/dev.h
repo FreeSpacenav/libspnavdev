@@ -21,20 +21,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "spnavdev.h"
 
 struct axisprop {
-	char *name;
+	const char *name;
 	int minval, maxval, deadz;
 };
 
 struct spndev {
 	char *name, *path;
-	int usb_vendor, usb_product;
+	unsigned short usb_vendor, usb_product;
+	unsigned internal_id;
 
 	int fd;			/* UNIX file descriptor */
 	void *handle;	/* Win32 handle */
 
 	int num_axes, num_buttons;
 	struct axisprop *aprop;
-	char **bn_name;
+	const char **bn_name;
 	int led;
 
 	void *uptr, *drvdata;
@@ -47,7 +48,7 @@ struct spndev {
 };
 
 
-int spndev_usb_open(struct spndev *dev, const char *devstr, int vend, int prod);
+int spndev_usb_open(struct spndev *dev, const char *devstr, unsigned short vend, unsigned short prod);
 int spndev_ser_open(struct spndev *dev, const char *devstr);
 
 
