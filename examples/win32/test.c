@@ -13,6 +13,7 @@ int main(int argc, char **argv)
 	int fd;
 	union spndev_event ev;
 	const char *s;
+	int led=0;
 
 	if(!(dev = spndev_open(argv[1]))) {
 		fprintf(stderr, "Failed to open 6dof device %s\n", argv[1] ? argv[1] : "");
@@ -41,6 +42,12 @@ int main(int argc, char **argv)
 							printf("button %d ", ev.bn.num);
 						}
 						puts(ev.bn.press ? "pressed" : "released");
+
+						if (ev.bn.press) {
+							spndev_set_led(dev, led);
+							led = !led;
+						}
+
 						break;
 
 					default:
