@@ -58,13 +58,13 @@ devinfo[] = {
     {0x046d, 0xc628, O, "SpaceNavigator for Notebooks",     "3DX-700034",  2, {"MENU", "FIT"}},
     {0x046d, 0xc629, O, "SpacePilot Pro",                   "3DX-700036", 31, {"MENU", "FIT", "T", "L", "R", "F", "B", "BK", "Roll +", "Roll -", "ISO1", "ISO2", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "ESC", "ALT", "SHIFT", "CTRL", "Rot", "Pan/Zoom", "Dom", "+", "-"}},
     {0x046d, 0xc62b, O, "SpaceMouse Pro",                   "3DX-700040", 27/*15*/, {"Menu", "FIT", "T", "", "R", "F", "", "", "Roll +", "", "", "", "", "1", "2", "3", "4", "", "", "", "", "", "", "ESC", "ALT", "SHIFT", "CTRL", "Rot"}},   // < ReportID>16  < Mask>00001000  LongPressButton_13 LongPressButton_14 LongPressButton_15 <Mask>00008000 LongPressButton_16
-    {0x046d, 0xc640, O, "nulooq",                           "",           15, {""}},  // From https://github.com/microdee/UE4-SpaceMouse/blob/3584fab85147a7806c15040b5625ddb07414bbcb/Source/SpaceMouseReader/Private/SpaceMouseReader.cpp#L26
+    {0x046d, 0xc640, O, "NuLOOQ",                           "",            5, {""}},  // Logitech First Available December 19, 2005  From https://github.com/microdee/UE4-SpaceMouse/blob/3584fab85147a7806c15040b5625ddb07414bbcb/Source/SpaceMouseReader/Private/SpaceMouseReader.cpp#L26
     {0x256f, 0xc62c, N, "LIPARI",                           "",           22, {"MENU", "FIT", "T", "L", "R", "F", "B", "BK", "Roll +", "RollMinus", "ISO1", "ISO2", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}},
     {0x256f, 0xc62e, N, "SpaceMouse Wireless (cabled)",     "3DX-700043",  2, {"MENU", "FIT"}},  // 3DX-700066 3DX-600044?
     {0x256f, 0xc62f, N, "SpaceMouse Wireless Receiver",     "3DX-700043",  2, {"MENU", "FIT"}},  // 3DX-700066 3DX-600044?
     {0x256f, 0xc631, N, "SpaceMouse Pro Wireless (cabled)", "3DX-700075", 27/*15*/, {"Menu", "FIT", "T", "", "R", "F", "", "", "Roll +", "", "", "", "", "1", "2", "3", "4", "", "", "", "", "", "", "ESC", "ALT", "SHIFT", "CTRL", "Rot"}},  // < ReportID>16 < Mask > 00001000  LongPressButton_13 LongPressButton_14 LongPressButton_15 <Mask>00008000 LongPressButton_16    3DX-600047
     {0x256f, 0xc632, N, "SpaceMouse Pro Wireless Receiver", "3DX-700075", 27/*15*/, {"Menu", "FIT", "T", "", "R", "F", "", "", "Roll +", "", "", "", "", "1", "2", "3", "4", "", "", "", "", "", "", "ESC", "ALT", "SHIFT", "CTRL", "Rot"}},  // < ReportID>16 < Mask > 00001000  LongPressButton_13 LongPressButton_14 LongPressButton_15 <Mask>00008000 LongPressButton_16    3DX-600047
-    {0x256f, 0xc633, N, "SpaceMouse Enterprise",            "3DX-700056", 27/*WTF*/, {"Menu", "FIT", "T", "", "R", "F", "", "", "Roll +", "", "", "", "", "1", "2", "3", "4", "", "", "", "", "", "", "ESC", "ALT", "SHIFT", "CTRL", "Rot"}},   // < ReportID>16  < Mask>00001000  LongPressButton_13 LongPressButton_14 LongPressButton_15 <Mask>00008000 LongPressButton_16   // 3DX-600051
+    {0x256f, 0xc633, N, "SpaceMouse Enterprise",            "3DX-700056", 31/*WTF*/, {"Menu", "FIT", "T", "", "R", "F", "", "", "Roll +", "", "", "", "", "1", "2", "3", "4", "", "", "", "", "", "", "ESC", "ALT", "SHIFT", "CTRL", "Rot"}},   // < ReportID>16  < Mask>00001000  LongPressButton_13 LongPressButton_14 LongPressButton_15 <Mask>00008000 LongPressButton_16   // 3DX-600051
     {0x256f, 0xc635, O, "SpaceMouse Compact",               "3DX-700059",  2, {"MENU", "FIT"}},
     {0x256f, 0xc636, O, "SpaceMouse Module",                "",            0, {""}},   // ??
     {0x256f, 0xc652, N, "SpaceMouse Universal Receiver",    "3DX-700069",  0, {""}},
@@ -86,13 +86,13 @@ int spndev_usb_open(struct spndev *dev, const char *devstr, unsigned short vend,
     int err = -1;
     struct hid_device_info* deviceinfos;
 
-    dev->fd = 0;
+    memset(dev, 0, sizeof(*dev));
 
     if (devstr) {
         /* Make a list of specific devices */
         deviceinfos = hid_enumerate(vend, prod);
         if (!deviceinfos) {
-            fprintf(stderr, "USB HID device %x:%x not found\n", vend, prod);
+            fprintf(stderr, "USB HID device %#0.4hx:%#0.4hx not found\n", vend, prod);
             return -1;
         }
     } else {
@@ -145,18 +145,25 @@ int spndev_usb_open(struct spndev *dev, const char *devstr, unsigned short vend,
                         dev->usb_product = cinfo->product_id;
                         opened = 1;
                         err = 0;    // Success
-                        fwprintf(stderr, L"Opened USB device %ws %x:%x %hs\n", cinfo->product_string, cinfo->vendor_id, cinfo->product_id, cinfo->path);
+                        fwprintf(stderr, L"Opened USB device %ws %#0.4hx:%#0.4hx %hs\n", cinfo->product_string, cinfo->vendor_id, cinfo->product_id, cinfo->path);
                         break;
                     }
                     else {
-                        fwprintf(stderr, L"Could not upen USB device %s %x:%x %hs\n", cinfo->product_string, cinfo->vendor_id, cinfo->product_id, cinfo->path);
+                        fwprintf(stderr, L"Could not upen USB device %s %#0.4hx:%#0.4hx %hs\n", cinfo->product_string, cinfo->vendor_id, cinfo->product_id, cinfo->path);
                     }
                 }
             }
         }
+
         if (vidmatch && !pidmatch) {
-            fwprintf(stderr, L"Found unsupported 3Dconnexion USB device %s %x:%x %hs\n", cinfo->product_string, cinfo->vendor_id, cinfo->product_id, cinfo->path);
+            fwprintf(stderr, L"Found unsupported USB device %s %s %#0.4hx:%#0.4hx %hs\n",
+                     cinfo->manufacturer_string, cinfo->product_string, cinfo->vendor_id, cinfo->product_id, cinfo->path);
+            fprintf(stderr, "Usage Page: %#.2hx, Usage ID: %#.2hx\n", cinfo->usage_page, cinfo->usage);
+            if (1 == cinfo->usage_page && 8 == cinfo->usage) {
+                fprintf(stderr, "The device seems to be a \"Multi - axis Controller\". Please report it.\n");
+            }
         }
+
         cinfo = cinfo->next;
         hididx++;
     }
@@ -230,7 +237,6 @@ static void usbdev_close(struct spndev *dev) {
         free(dev->drvdata);
         free(dev->aprop);
         free((void *)dev->bn_name);
-        free(dev);
     }
 
 }
@@ -267,6 +273,13 @@ static int usbdev_read_O(struct spndev *dev, union spndev_event *evt)
             break;
         case 3:  // Buttons
             usbdev_parsebuttons(dev, evt, buffer);
+            break;
+
+        default:
+            for (size_t i = 0; i < newposrotreportsize; ++i) {
+                printf("%x", buffer[i]);
+            }
+            break;
         }
     }
     return evt->type;
@@ -296,6 +309,13 @@ static int usbdev_read_N(struct spndev* dev, union spndev_event* evt)
 
         case 3:  // Buttons
             usbdev_parsebuttons(dev, evt, buffer);
+            break;
+
+        default:
+            for (size_t i = 0; i < newposrotreportsize; ++i) {
+                printf("%x", buffer[i]);
+            }
+            break;
         }
     }
     return evt->type;
