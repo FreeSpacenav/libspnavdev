@@ -26,6 +26,7 @@ int main(int argc, char **argv)
 	fd_set rdset;
 	union spndev_event ev;
 	const char *s;
+	int led=0;
 
 	signal(SIGINT, sighandler);
 
@@ -58,6 +59,12 @@ int main(int argc, char **argv)
 							printf("button %d ", ev.bn.num);
 						}
 						puts(ev.bn.press ? "pressed" : "released");
+
+						if (ev.bn.press) {
+							spndev_set_led(dev, led);
+							led = !led;
+						}
+
 						break;
 
 					default:

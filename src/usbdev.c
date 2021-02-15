@@ -56,15 +56,15 @@ devinfo[] = {
     {0x046d, 0xc626, O, "SpaceNavigator",                   "3DX-700028",  2, {"MENU", "FIT"} },  // also "3DX-600028" "3DX-600029"? "SpaceNavigator USB" on the label
     {0x046d, 0xc627, O, "SpaceExplorer",                    "3DX-700026", 15, {"1", "2", "T", "L", "R", "F", "ESC", "ALT", "SHIFT", "CTRL", "FIT", "PANEL", "+", "-", "2D"}},  // Also "3DX-600029"? "3DX-600025" both "SpaceExplorer USB" "DLZ-3DX-700026 (B)" on the other side,  "Part No. 3DX-700026" on the box
     {0x046d, 0xc628, O, "SpaceNavigator for Notebooks",     "3DX-700034",  2, {"MENU", "FIT"}},
-    {0x046d, 0xc629, O, "SpacePilot Pro",                   "3DX-700036", 31, {"MENU", "FIT", "T", "L", "R", "F", "B", "BK", "Roll +", "Roll -", "ISO1", "ISO2", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "ESC", "ALT", "SHIFT", "CTRL", "Rot", "Pan/Zoom", "Dom", "+", "-"}},
-    {0x046d, 0xc62b, O, "SpaceMouse Pro",                   "3DX-700040", 27/*15*/, {"Menu", "FIT", "T", "", "R", "F", "", "", "Roll +", "", "", "", "", "1", "2", "3", "4", "", "", "", "", "", "", "ESC", "ALT", "SHIFT", "CTRL", "Rot"}},   // < ReportID>16  < Mask>00001000  LongPressButton_13 LongPressButton_14 LongPressButton_15 <Mask>00008000 LongPressButton_16
-    {0x046d, 0xc640, O, "NuLOOQ",                           "",            5, {""}},  // Logitech First Available December 19, 2005  From https://github.com/microdee/UE4-SpaceMouse/blob/3584fab85147a7806c15040b5625ddb07414bbcb/Source/SpaceMouseReader/Private/SpaceMouseReader.cpp#L26
-    {0x256f, 0xc62c, N, "LIPARI",                           "",           22, {"MENU", "FIT", "T", "L", "R", "F", "B", "BK", "Roll +", "RollMinus", "ISO1", "ISO2", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}},
+    {0x046d, 0xc629, O, "SpacePilot Pro",                   "3DX-700036", 31,       {"MENU", "FIT", "T", "L", "R", "F", "B", "BK", "Roll +", "Roll -", "ISO1", "ISO2", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "ESC", "ALT", "SHIFT", "CTRL", "Rot", "Pan/Zoom", "Dom", "+", "-"}},
+    {0x046d, 0xc62b, O, "SpaceMouse Pro",                   "3DX-700040", 27/*15*/, {"Menu", "FIT", "T",  "", "R", "F",  "",   "", "Roll +",       "",     "",     "", "1", "2", "3", "4",  "",  "",  "",  "",  "",   "", "ESC", "ALT", "SHIFT", "CTRL", "Rot"}},   // < ReportID>16  < Mask>00001000  LongPressButton_13 LongPressButton_14 LongPressButton_15 <Mask>00008000 LongPressButton_16
+    {0x046d, 0xc640, O, "NuLOOQ",                           "",            5, {""}},  // Logitech Amazon First Available December 19, 2005  From https://github.com/microdee/UE4-SpaceMouse/blob/3584fab85147a7806c15040b5625ddb07414bbcb/Source/SpaceMouseReader/Private/SpaceMouseReader.cpp#L26
+    {0x256f, 0xc62c, N, "LIPARI",                           "",           22,       {"MENU", "FIT", "T", "L", "R", "F", "B", "BK", "Roll +", "Roll -", "ISO1", "ISO2", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}},
     {0x256f, 0xc62e, N, "SpaceMouse Wireless (cabled)",     "3DX-700043",  2, {"MENU", "FIT"}},  // 3DX-700066 3DX-600044?
     {0x256f, 0xc62f, N, "SpaceMouse Wireless Receiver",     "3DX-700043",  2, {"MENU", "FIT"}},  // 3DX-700066 3DX-600044?
-    {0x256f, 0xc631, N, "SpaceMouse Pro Wireless (cabled)", "3DX-700075", 27/*15*/, {"Menu", "FIT", "T", "", "R", "F", "", "", "Roll +", "", "", "", "", "1", "2", "3", "4", "", "", "", "", "", "", "ESC", "ALT", "SHIFT", "CTRL", "Rot"}},  // < ReportID>16 < Mask > 00001000  LongPressButton_13 LongPressButton_14 LongPressButton_15 <Mask>00008000 LongPressButton_16    3DX-600047
-    {0x256f, 0xc632, N, "SpaceMouse Pro Wireless Receiver", "3DX-700075", 27/*15*/, {"Menu", "FIT", "T", "", "R", "F", "", "", "Roll +", "", "", "", "", "1", "2", "3", "4", "", "", "", "", "", "", "ESC", "ALT", "SHIFT", "CTRL", "Rot"}},  // < ReportID>16 < Mask > 00001000  LongPressButton_13 LongPressButton_14 LongPressButton_15 <Mask>00008000 LongPressButton_16    3DX-600047
-    {0x256f, 0xc633, N, "SpaceMouse Enterprise",            "3DX-700056", 31/*WTF*/, {"Menu", "FIT", "T", "", "R", "F", "", "", "Roll +", "", "", "", "", "1", "2", "3", "4", "", "", "", "", "", "", "ESC", "ALT", "SHIFT", "CTRL", "Rot"}},   // < ReportID>16  < Mask>00001000  LongPressButton_13 LongPressButton_14 LongPressButton_15 <Mask>00008000 LongPressButton_16   // 3DX-600051
+    {0x256f, 0xc631, N, "SpaceMouse Pro Wireless (cabled)", "3DX-700075", 27/*15*/, {"MENU", "FIT", "T",  "", "R", "F",  "",   "", "Roll +",       "",     "",     "", "1", "2", "3", "4",  "",  "",  "",  "",  "",   "", "ESC", "ALT", "SHIFT", "CTRL", "Rot"}},  // < ReportID>16 < Mask > 00001000  LongPressButton_13 LongPressButton_14 LongPressButton_15 <Mask>00008000 LongPressButton_16    3DX-600047
+    {0x256f, 0xc632, N, "SpaceMouse Pro Wireless Receiver", "3DX-700075", 27/*15*/, {"MENU", "FIT", "T",  "", "R", "F",  "",   "", "Roll +",       "",     "",     "", "1", "2", "3", "4",  "",  "",  "",  "",  "",   "", "ESC", "ALT", "SHIFT", "CTRL", "Rot"}},  // < ReportID>16 < Mask > 00001000  LongPressButton_13 LongPressButton_14 LongPressButton_15 <Mask>00008000 LongPressButton_16    3DX-600047
+    {0x256f, 0xc633, N, "SpaceMouse Enterprise",            "3DX-700056", 31/*31*/, {"MENU", "FIT", "T",  "", "R", "F",  "",   "", "Roll +",       "", "ISO1",     "", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "ESC", "ALT", "SHIFT", "CTRL", "Rot"}},   // report1C  ENTER, DELETE, 11, 12, V1, V2, V3, TAB, SPACE    < ReportID>16  < Mask>00001000  LongPressButton_13 LongPressButton_14 LongPressButton_15 <Mask>00008000 LongPressButton_16   // 3DX-600051
     {0x256f, 0xc635, O, "SpaceMouse Compact",               "3DX-700059",  2, {"MENU", "FIT"}},
     {0x256f, 0xc636, O, "SpaceMouse Module",                "",            0, {""}},   // ??
     {0x256f, 0xc652, N, "SpaceMouse Universal Receiver",    "3DX-700069",  0, {""}},
@@ -323,11 +323,14 @@ static int usbdev_read_N(struct spndev* dev, union spndev_event* evt)
 
 static void usbdev_setled(struct spndev *dev, int led)
 {
+    const unsigned char led_report[2] = { 4, led };
+    hid_write((hid_device*)dev->handle, led_report, sizeof(led_report));
+    dev->led = led;
 }
 
 static int usbdev_getled(struct spndev *dev)
 {
-    return 0;
+    return dev->led;
 }
 
 static inline void usbdev_parsebuttons(const struct spndev* dev, union spndev_event* evt, const unsigned char *report) {
