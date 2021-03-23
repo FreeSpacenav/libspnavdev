@@ -18,6 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef SPNAVDEV_H_
 #define SPNAVDEV_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct spndev;
 
 enum {
@@ -83,5 +87,8 @@ int spndev_get_led(struct spndev *dev);
 int spndev_set_deadzone(struct spndev *dev, int axis, int dead);
 int spndev_get_deadzone(struct spndev *dev, int axis);
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif	/* SPNAVDEV_H_ */
