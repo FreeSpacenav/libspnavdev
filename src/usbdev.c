@@ -16,10 +16,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#else
+/* assume hidapi */
+#define HAVE_HIDAPI
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
 #include <malloc.h>
+
+#ifdef HAVE_HIDAPI
 #include "hidapi.h"
 #include "dev.h"
 
@@ -374,3 +383,12 @@ static inline void checkrange(const struct spndev* dev, const int val) {
         fwprintf(stderr, L"Too low %i\n", val);
     }
 }
+
+#else
+
+int spndev_usb_open(struct spndev *dev, const char *devstr, unsigned short vend, unsigned short prod) {
+    fprintf(stderr, "HIDAPI support not compiled in.\n");
+    return -1;
+}
+
+#endif

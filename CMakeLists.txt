@@ -22,7 +22,8 @@ project(
   VERSION 0.1
   LANGUAGES C)
 
-find_package(HIDAPI REQUIRED)
+find_package(HIDAPI)
+
 
 add_library(spnavdev
   src/serdev.c
@@ -30,9 +31,16 @@ add_library(spnavdev
   src/usbdev.c
 )
 
-target_link_libraries(spnavdev PRIVATE ${HIDAPI_LIBRARY})
-target_include_directories(spnavdev PRIVATE ${HIDAPI_INCLUDE_DIR})
+if(HIDAPI_FOUND)
+  set(HAVE_HIDAPI TRUE)
+  target_link_libraries(spnavdev PRIVATE ${HIDAPI_LIBRARY})
+  target_include_directories(spnavdev PRIVATE ${HIDAPI_INCLUDE_DIR})
+endif()
 target_include_directories(spnavdev PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
+
+configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+target_include_directories(spnavdev PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_compile_definitions(spnavdev PRIVATE HAVE_CONFIG_H)
 
 if(WIN32)
   add_subdirectory(examples/win32)
