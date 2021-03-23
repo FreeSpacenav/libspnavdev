@@ -133,7 +133,7 @@ int spndev_usb_open(struct spndev *dev, const char *devstr, unsigned short vend,
                     hid_device* hiddev = hid_open_path(cinfo->path);
                     if (hiddev) {
                         if (!(dev->path = _strdup(cinfo->path))) {
-                            fprintf(stderr, "spndev_open: Failed to allocade device path\n");
+                            fprintf(stderr, "spndev_open: Failed to allocate device path\n");
                             goto cleanup;
                         }
                         if (!(dev->name = (char*)_wcsdup(cinfo->product_string))) {
@@ -200,7 +200,7 @@ static int usbdev_init(struct spndev* dev, const unsigned type)
     dev->num_buttons = devinfo[type].nbuttons;
 
     if (!(dev->drvdata = calloc(1, sizeof(tspnav_hid)))) {
-        fprintf(stderr, "spndev_open: failed to allocate HId buffer\n");
+        fprintf(stderr, "spndev_open: failed to allocate HID buffer\n");
         return -1;
     }
 
