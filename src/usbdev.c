@@ -81,6 +81,12 @@ static int usbdev_getled(struct spndev* dev);
 static inline void usbdev_parsebuttons(const struct spndev* dev, union spndev_event* evt, const unsigned char* report);
 static inline void checkrange(const struct spndev* dev, const int val);
 
+#ifdef _WIN32
+#define VID_PID_FORMAT_STR "%04x:%04x"
+#else
+#define VID_PID_FORMAT_STR "%#0.4hx:%#0.4hx"
+#endif
+
 int spndev_usb_open(struct spndev *dev, const char *devstr, unsigned short vend, unsigned short prod)
 {
     int err = -1;
@@ -92,7 +98,7 @@ int spndev_usb_open(struct spndev *dev, const char *devstr, unsigned short vend,
         /* Make a list of specific devices */
         deviceinfos = hid_enumerate(vend, prod);
         if (!deviceinfos) {
-            fprintf(stderr, "USB HID device %#0.4hx:%#0.4hx not found\n", vend, prod);
+            fprintf(stderr, "USB HID device " VID_PID_FORMAT_STR " not found\n", vend, prod);
             return -1;
         }
     } else {
@@ -145,18 +151,18 @@ int spndev_usb_open(struct spndev *dev, const char *devstr, unsigned short vend,
                         dev->usb_product = cinfo->product_id;
                         opened = 1;
                         err = 0;    // Success
-                        fwprintf(stderr, L"Opened USB device %ws %#0.4hx:%#0.4hx %hs\n", cinfo->product_string, cinfo->vendor_id, cinfo->product_id, cinfo->path);
+                        fwprintf(stderr, L"Opened USB device %ws " VID_PID_FORMAT_STR " %hs\n", cinfo->product_string, cinfo->vendor_id, cinfo->product_id, cinfo->path);
                         break;
                     }
                     else {
-                        fwprintf(stderr, L"Could not upen USB device %s %#0.4hx:%#0.4hx %hs\n", cinfo->product_string, cinfo->vendor_id, cinfo->product_id, cinfo->path);
+                        fwprintf(stderr, L"Could not open USB device %s " VID_PID_FORMAT_STR " %hs\n", cinfo->product_string, cinfo->vendor_id, cinfo->product_id, cinfo->path);
                     }
                 }
             }
         }
 
         if (vidmatch && !pidmatch) {
-            fwprintf(stderr, L"Found unsupported USB device %s %s %#0.4hx:%#0.4hx %hs\n",
+            fwprintf(stderr, L"Found unsupported USB device %s %s " VID_PID_FORMAT_STR " %hs\n",
                      cinfo->manufacturer_string, cinfo->product_string, cinfo->vendor_id, cinfo->product_id, cinfo->path);
             fprintf(stderr, "Usage Page: %#.2hx, Usage ID: %#.2hx\n", cinfo->usage_page, cinfo->usage);
             if (1 == cinfo->usage_page && 8 == cinfo->usage) {
