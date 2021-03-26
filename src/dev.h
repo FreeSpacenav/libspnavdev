@@ -27,7 +27,7 @@ struct axisprop {
 
 struct spndev {
 	char *name, *path;
-	unsigned short usb_vendor, usb_product;
+	uint16_t usb_vendor, usb_product;
 	unsigned internal_id;
 
 	int fd;			/* UNIX file descriptor */
@@ -48,7 +48,7 @@ struct spndev {
 };
 
 
-int spndev_usb_open(struct spndev *dev, const char *devstr, unsigned short vend, unsigned short prod);
+int spndev_usb_open(struct spndev *dev, const char *devstr, uint16_t vend, uint16_t prod);
 int spndev_ser_open(struct spndev *dev, const char *devstr);
 
 

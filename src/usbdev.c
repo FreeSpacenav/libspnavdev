@@ -62,7 +62,7 @@ devinfo[] = {
     {0x046d, 0xc621, O, "Spaceball 5000 USB",               "5000 USB",   12, {"1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C"}},  // Buttons order?
     {0x046d, 0xc623, O, "SpaceTraveler",                    "",            8, {"1", "2", "3", "4", "5", "6", "7", "8"}},
     {0x046d, 0xc625, O, "SpacePilot",                       "SP1 USB",    21, {"1", "2", "3", "4", "5", "6", "T", "L", "R", "F", "ESC", "ALT", "SHIFT", "CTRL", "FIT", "PANEL", "+", "-", "Dom", "3D Lock", "Config"}},  // IBM "(P) P/N: 60K9206", "(P) FRU P/N: 4K9204"
-    {0x046d, 0xc626, O, "SpaceNavigator",                   "3DX-700028",  2, {"MENU", "FIT"} },  // also "3DX-600028" "3DX-600029"? "SpaceNavigator USB" on the label
+    {0x046d, 0xc626, O, "SpaceNavigator",                   "3DX-700028",  2, {"MENU", "FIT"} },  // also "3DX-600027" "3DX-600028" "3DX-600029"? "SpaceNavigator USB" on the label
     {0x046d, 0xc627, O, "SpaceExplorer",                    "3DX-700026", 15, {"1", "2", "T", "L", "R", "F", "ESC", "ALT", "SHIFT", "CTRL", "FIT", "PANEL", "+", "-", "2D"}},  // Also "3DX-600029"? "3DX-600025" both "SpaceExplorer USB" "DLZ-3DX-700026 (B)" on the other side,  "Part No. 3DX-700026" on the box
     {0x046d, 0xc628, O, "SpaceNavigator for Notebooks",     "3DX-700034",  2, {"MENU", "FIT"}},
     {0x046d, 0xc629, O, "SpacePilot Pro",                   "3DX-700036", 31,       {"MENU", "FIT", "T", "L", "R", "F", "B", "BK", "Roll +", "Roll -", "ISO1", "ISO2", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "ESC", "ALT", "SHIFT", "CTRL", "Rot", "Pan/Zoom", "Dom", "+", "-"}},
@@ -96,7 +96,7 @@ static inline void checkrange(const struct spndev* dev, const int val);
 #define VID_PID_FORMAT_STR "%#0.4hx:%#0.4hx"
 #endif
 
-int spndev_usb_open(struct spndev *dev, const char *devstr, unsigned short vend, unsigned short prod)
+int spndev_usb_open(struct spndev *dev, const char *devstr, uint16_t vend, uint16_t prod)
 {
     int err = -1;
     struct hid_device_info* deviceinfos;
@@ -386,7 +386,7 @@ static inline void checkrange(const struct spndev* dev, const int val) {
 
 #else
 
-int spndev_usb_open(struct spndev *dev, const char *devstr, unsigned short vend, unsigned short prod) {
+int spndev_usb_open(struct spndev *dev, const char *devstr, uint16_t vend, uint16_t prod) {
     fprintf(stderr, "HIDAPI support not compiled in.\n");
     return -1;
 }

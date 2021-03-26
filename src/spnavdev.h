@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef SPNAVDEV_H_
 #define SPNAVDEV_H_
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -61,7 +63,7 @@ void *spndev_get_userptr(struct spndev *dev);
 /* device information */
 const char *spndev_name(struct spndev *dev);
 const char *spndev_path(struct spndev *dev);
-int spndev_usbid(struct spndev *dev, int *vend, int *prod);
+int spndev_usbid(struct spndev *dev, uint16_t *vend, uint16_t *prod);
 
 int spndev_num_axes(struct spndev *dev);
 const char *spndev_axis_name(struct spndev *dev, int axis);

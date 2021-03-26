@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 struct spndev *spndev_open(const char *devstr)
 {
 	struct spndev *dev;
-	unsigned short vendor = 0xffff, product = 0xffff;
+	uint16_t vendor = 0xffff, product = 0xffff;
 
 	if(!(dev = malloc(sizeof *dev))) {
 		perror("spndev_open: failed to allocate device structure");
@@ -73,9 +73,9 @@ const char *spndev_path(struct spndev *dev)
 	return dev->path;
 }
 
-int spndev_usbid(struct spndev *dev, int *vend, int *prod)
+int spndev_usbid(struct spndev *dev, uint16_t*vend, uint16_t*prod)
 {
-	if(dev->usb_vendor == -1) return -1;
+	if( (dev->usb_vendor == 0) || (dev->usb_vendor == 0xFFFF) ) return -1;
 	*vend = dev->usb_vendor;
 	*prod = dev->usb_product;
 	return 0;
