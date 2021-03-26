@@ -91,7 +91,7 @@ static inline void usbdev_parsebuttons(const struct spndev* dev, union spndev_ev
 static inline void checkrange(const struct spndev* dev, const int val);
 
 #ifdef _WIN32
-#define VID_PID_FORMAT_STR "%04x:%04x"
+#define VID_PID_FORMAT_STR "%#0.4hx:%#0.4hx"
 #else
 #define VID_PID_FORMAT_STR "%#0.4hx:%#0.4hx"
 #endif
@@ -338,7 +338,7 @@ static int usbdev_read_N(struct spndev* dev, union spndev_event* evt)
 
 static void usbdev_setled(struct spndev *dev, int led)
 {
-    const unsigned char led_report[2] = { 4, led };
+    const unsigned char led_report[2] = {4, (unsigned char)led};
     hid_write((hid_device*)dev->handle, led_report, sizeof(led_report));
     dev->led = led;
 }
