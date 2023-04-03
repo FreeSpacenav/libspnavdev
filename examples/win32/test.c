@@ -25,35 +25,31 @@ int main(int argc, char **argv)
 
 	while(!quit) {
 
-		if(1 > 0) {
-			if(1) {
-				if(spndev_process(dev, &ev)) {
-					switch(ev.type) {
-					case SPNDEV_MOTION:
-						printf("motion: T[%+6d %+6d %+6d]  R[%+6d %+6d %+6d]\n",
-								ev.mot.v[0], ev.mot.v[1], ev.mot.v[2], ev.mot.v[3],
-								ev.mot.v[4], ev.mot.v[5]);
-						break;
+		if (spndev_process(dev, &ev)) {
+			switch (ev.type) {
+			case SPNDEV_MOTION:
+				printf("motion: T[%+6d %+6d %+6d]  R[%+6d %+6d %+6d]\n",
+					ev.mot.v[0], ev.mot.v[1], ev.mot.v[2], ev.mot.v[3],
+					ev.mot.v[4], ev.mot.v[5]);
+				break;
 
-					case SPNDEV_BUTTON:
-						if((s = spndev_button_name(dev, ev.bn.num))) {
-							printf("button %d (%s) ", ev.bn.num, s);
-						} else {
-							printf("button %d ", ev.bn.num);
-						}
-						puts(ev.bn.press ? "pressed" : "released");
-
-						if (ev.bn.press) {
-							spndev_set_led(dev, led);
-							led = !led;
-						}
-
-						break;
-
-					default:
-						break;
-					}
+			case SPNDEV_BUTTON:
+				if ((s = spndev_button_name(dev, ev.bn.num))) {
+					printf("button %d (\"%s\") ", ev.bn.num, s);
+				} else {
+					printf("button %d ", ev.bn.num);
 				}
+				puts(ev.bn.press ? "pressed" : "released");
+
+				if (ev.bn.press) {
+					spndev_set_led(dev, led);
+					led = !led;
+				}
+
+				break;
+
+			default:
+				break;
 			}
 		}
 

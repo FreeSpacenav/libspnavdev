@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
 					case SPNDEV_BUTTON:
 						if((s = spndev_button_name(dev, ev.bn.num))) {
-							printf("button %d (%s) ", ev.bn.num, s);
+							printf("button %d (\"%s\") ", ev.bn.num, s);
 						} else {
 							printf("button %d ", ev.bn.num);
 						}
