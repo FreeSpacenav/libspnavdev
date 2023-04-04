@@ -26,6 +26,7 @@
 
 #define INP_BUF_SZ	256
 
+#define TURBO_MAGELLAN_COMPRESS
 
 enum {
 	SB4000	= 1,
@@ -71,7 +72,7 @@ static struct {
 	{"Spaceball 2003C", 8, {"1", "2", "3", "4", "5", "6", "7", "8"}},
 	{"Spaceball 3003/3003C", 2, {"R", "L"}},
 	{"Spaceball 4000FLX/5000FLX-A", 12, {"1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C"}},
-	{"Magellan SpaceMouse", 9, {"1", "2", "3", "4", "5", "6", "7", "8", "*"}},
+	{"Magellan SpaceMouse", 11, {"1", "2", "3", "4", "5", "6", "7", "8", "*", "+", "-"}},
 	{"Spaceball 5000FLX", 12, {"1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C"}},
 	{"CadMan", 4, {"1", "2", "3", "4"}},
 	{"Space Explorer", 14, {"1", "2", "T", "L", "R", "F", "ALT", "ESC", "SHIFT", "CTRL", "Fit", "Panel", "+", "-", "2D"}},
@@ -96,6 +97,7 @@ static int guess_device(const char *verstr);
 
 static void make_printable(char *buf, int len);
 static int read_timeout(int fd, char *buf, int bufsz, long tm_usec);
+static void gen_button_events(struct sball* sb, unsigned int prev, union spndev_event* evt);
 
 
 int spndev_ser_open(struct spndev *dev, const char *devstr)
@@ -120,6 +122,8 @@ int spndev_ser_open(struct spndev *dev, const char *devstr)
 	dev->drvdata = sb;
 	dev->close = close_dev_serial;
 	dev->read = read_dev_serial;
+	dev->setled = 0;
+	dev->getled = 0;
 
 	stty_save(fd, sb);
 
@@ -132,7 +136,7 @@ int spndev_ser_open(struct spndev *dev, const char *devstr)
 		/* we got a response, so it's a spaceball */
 		make_printable(buf, sz);
 		if(init_dev(dev, guess_device(buf)) == -1) {
-			fprintf(stderr, "spndev_open: failed to initialized device structure\n");
+			fprintf(stderr, "spndev_open: failed to initialize device structure\n");
 			goto err;
 		}
 
@@ -164,7 +168,17 @@ int spndev_ser_open(struct spndev *dev, const char *devstr)
 		printf("Magellan SpaceMouse detected: %s\n", dev->name);
 
 		/* set 3D mode, not-dominant-axis, pass through motion and button packets */
-		serwrite(fd, "m3\r", 3);
+//		serwrite(fd, "m3\r", 3);
+#ifdef TURBO_MAGELLAN_COMPRESS
+		/* set 3D mode, not-dominant-axis, pass through motion and button packets, extended key
+		   mode, turbo/compressed Magellan mode */
+		serwrite(fd, "c33\r", 4);
+#else
+		/* set 3D mode, not-dominant-axis, pass through motion and button packets, extended key
+		   mode */
+		serwrite(fd, "c32\r", 4);
+#endif
+		sz = read_timeout(fd, buf, sizeof buf - 1, 250000);
 
 		sb->parse = mag_parsepkt;
 		return 0;
@@ -192,9 +206,11 @@ static int read_dev_serial(struct spndev* dev, union spndev_event* evt)
 
 	if (!sb) return -1;
 
-    evt->type = SPNDEV_NONE;
+	evt->type = SPNDEV_NONE;
 
-	while ((sz = serread(dev->fd, sb->buf + sb->len, INP_BUF_SZ - sb->len - 1)) > 0) {
+//	while ((sz = serread(dev->fd, sb->buf + sb->len, INP_BUF_SZ - sb->len - 1)) > 0) {
+	{
+		sz = serread(dev->fd, sb->buf + sb->len, (16 > INP_BUF_SZ - sb->len - 1) ? INP_BUF_SZ - sb->len - 1 : 16);
 		sb->len += sz;
 		proc_input(dev, evt);
 	}
@@ -221,6 +237,7 @@ static int init_dev(struct spndev *dev, int type)
 	}
 	dev->num_axes = 6;
 	dev->num_buttons = devinfo[type].nbuttons;
+	sb->keymask      = 0xffff >> (16 - dev->num_buttons);
 
 	if(!(dev->aprop = malloc(dev->num_axes * sizeof *dev->aprop))) {
 		free(dev->name);
@@ -231,7 +248,7 @@ static int init_dev(struct spndev *dev, int type)
 		free(dev->name);
 	}
 
-	for(i=0; i<6; i++) {
+	for(i = 0; i < dev->num_axes; i++) {
 		dev->aprop[i].name = axnames[i];
 		/* TODO min/max/deadz */
 	}
@@ -326,7 +343,7 @@ static int proc_input(struct spndev* dev, union spndev_event* evt)
 
 	sz = start - sb->buf;
 	if (sz > 0) {
-		memmove(sb->buf, start, sz);
+		memmove(sb->buf, start, sz);	// PAR@@@ hmmmm.... reading from memory beyond buf ?
 		sb->len -= sz;
 	}
 	return 0;
@@ -337,29 +354,55 @@ static int mag_parsepkt(struct spndev* dev, union spndev_event* evt, int id, cha
 	struct sball* sb = (struct sball*)dev->drvdata;
 	int i, prev, motion_pending = 0;
 	unsigned int prev_key;
+	unsigned check_sum=0;
 
 	/*printf("magellan packet: %c - %s (%d bytes)\n", (char)id, data, len);*/
 
 	switch(id) {
 	case 'd':
+#ifdef TURBO_MAGELLAN_COMPRESS
+		if(len != 14) {
+#else
 		if(len != 24) {
+#endif
 			fprintf(stderr, "magellan: invalid data packet, expected 24 bytes, got: %d\n", len);
 			return -1;
 		}
-		evt->type = SPNDEV_MOTION;
-		for(i=0; i<6; i++) {
+//		evt->type = SPNDEV_MOTION;
+		for(i = 0; i < dev->num_axes; i++) {
 			prev = evt->mot.v[i];
+
+#ifdef TURBO_MAGELLAN_COMPRESS
+			evt->mot.v[i] = ((((int)data[0] & 0x3f) << 6) | (data[1] & 0x3f)) - 0x800;
+			check_sum += (unsigned char)(data[0]);
+			check_sum += (unsigned char)(data[1]);
+			data += 2;
+#else
 			evt->mot.v[i] = ((((int)data[0] & 0xf) << 12) | (((int)data[1] & 0xf) << 8) |
 					(((int)data[2] & 0xf) << 4) | (data[3] & 0xf)) - 0x8000;
 			data += 4;
+#endif
 
 			if(evt->mot.v[i] != prev) {
 // PAR@@@				enqueue_motion(sb, i, evt->mot.v[i]);
 				motion_pending++;
 			}
 		}
+#ifdef TURBO_MAGELLAN_COMPRESS
+		{
+			/* Verify checksum */
+			unsigned checsum_rec =  ((((unsigned)data[0] & 0x3f) << 6) | (data[1] & 0x3f));
+			if(check_sum != checsum_rec) {
+				fprintf(stderr, "magellan: invalid check sum, expected %u, got: %u\n",
+				        checsum_rec, check_sum);
+			};
+			data += 2;
+		}
+#endif
+
 		if(motion_pending) {
 // PAR@@@			enqueue_motion(sb, -1, 0);
+			evt->type = SPNDEV_MOTION;
 		}
 		break;
 
@@ -375,7 +418,7 @@ static int mag_parsepkt(struct spndev* dev, union spndev_event* evt, int id, cha
 		}
 
 		if(sb->keystate != prev_key) {
-// PAR@@@			gen_button_events(sb, prev_key);
+			gen_button_events(sb, prev_key, evt);
 		}
 		break;
 
@@ -435,13 +478,13 @@ static int sball_parsepkt(struct spndev* dev, union spndev_event* evt, int id, c
 			return -1;
 		}
 
-		for(i=0; i<6; i++) {
+		for(i = 0; i < dev->num_axes; i++) {
 			data += 2;
 			prev = evt->mot.v[i];
 #ifdef SBALL_BIG_ENDIAN
-            evt->mot.v[i] = data[0] | data[1] << 8;
+			evt->mot.v[i] = data[0] | data[1] << 8;
 #else
-            evt->mot.v[i] = data[1] | data[0] << 8;
+			evt->mot.v[i] = data[1] | data[0] << 8;
 #endif
 
 			if(evt->mot.v[i] != prev) {
@@ -472,8 +515,7 @@ static int sball_parsepkt(struct spndev* dev, union spndev_event* evt, int id, c
 			((data[0] & 0x10) << 3)) & sb->keymask;
 
 		if(sb->keystate != prev_key) {
-// PAR@@@			gen_button_events(sb, prev_key);
-			evt->type = SPNDEV_BUTTON;
+			gen_button_events(sb, prev_key, evt);
 		}
 		break;
 
@@ -486,8 +528,8 @@ static int sball_parsepkt(struct spndev* dev, union spndev_event* evt, int id, c
 		if(!(sb->flags & SB4000)) {
 			printf("Switching to spaceball 4000flx/5000flx-a mode (12 buttons)            \n");
 			sb->flags |= SB4000;
-			dev->num_buttons = 12;	/* might have guessed 8 before */
-			sb->keymask = 0xfff;
+			dev->num_buttons = 12;	/* might have guessed 8 before */	// PAR@@@@@@ FIIIIX reallocate the button names array at the very least!
+			sb->keymask      = 0xffff >> (16 - dev->num_buttons);
 		}
 		/* update orientation flag (actually don't bother) */
 		/*
@@ -505,7 +547,7 @@ static int sball_parsepkt(struct spndev* dev, union spndev_event* evt, int id, c
 		 */
 		sb->keystate = (data[1] & 0x3f) | ((data[1] & 0x80) >> 1) | ((data[0] & 0x1f) << 7);
 		if(sb->keystate != prev_key) {
-// PAR@@@			gen_button_events(sb, prev_key);
+			gen_button_events(sb, prev_key, evt);
 		}
 		break;
 
@@ -535,7 +577,27 @@ static int sball_parsepkt(struct spndev* dev, union spndev_event* evt, int id, c
 	return 0;
 }
 
+// Probably not needed used in the original dev_serial.c only to make sure that an unknown message can be printf-ed
 static void make_printable(char* buf, int len) {}
-static int read_timeout(int fd, char* buf, int bufsz, long tm_usec) { 
+
+// Only used in the spndev_ser_open function after opening the serial purt (and thus powerin the device)
+// to allow for the first bytes to arrive. Since on Win32 I configure the serial port "blocking" enyway this is not
+// really needed. Kept in case in Linux/Unix or some other platform it is harder to achive.
+static int read_timeout(int fd, char* buf, int bufsz, long tm_usec) {
 	return serread(fd, buf, bufsz);
+}
+
+static void gen_button_events(struct sball* sb, unsigned int prev, union spndev_event* evt) {
+	int i;
+	unsigned int bit  = 1;
+	unsigned int diff = sb->keystate ^ prev;
+
+	for(i = 0; i < 16; i++) {
+		if(diff & bit) {
+			evt->type     = SPNDEV_BUTTON;
+			evt->bn.press = sb->keystate & bit ? 1 : 0;
+			evt->bn.num   = i;
+		}
+		bit <<= 1;
+	}
 }

@@ -54,11 +54,14 @@ int seropen(char const* devstr) {
     // Flush away any bytes previously read or written.
     checkerror(FlushFileBuffers(h), "Failed to flush serial port");
 
+    // https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddser/ns-ntddser-_serial_timeouts
+    // https://docs.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-commtimeouts
     // https://docs.microsoft.com/en-us/windows-hardware/drivers/serports/setting-read-and-write-timeouts-for-a-serial-device
-    CommTimeouts.ReadIntervalTimeout         = 2 * 1000 * 8 / 9600; // 9600kbps * 2 for margin
-    CommTimeouts.ReadTotalTimeoutMultiplier  = 1;
-    CommTimeouts.ReadTotalTimeoutConstant    = 1;
-    CommTimeouts.WriteTotalTimeoutMultiplier = 2 * 1000 * 8 / 9600;
+    CommTimeouts.ReadIntervalTimeout      = 2 * 1000 * (1+8+1) / 9600; // Inter byte time out in ms. 2 for margin * (1 start 8 data 1 stop bits) / 9600bps    /* = MAXDWORD; for non blocking */
+    CommTimeouts.ReadTotalTimeoutMultiplier  = 0;
+    CommTimeouts.ReadTotalTimeoutConstant    = 0;
+
+    CommTimeouts.WriteTotalTimeoutMultiplier = 2 * 1000 * (1+8+1)/ 9600;
     CommTimeouts.WriteTotalTimeoutConstant   = 0;
     checkerror(SetCommTimeouts(h, &CommTimeouts), "Failed to set serial timeouts");
 

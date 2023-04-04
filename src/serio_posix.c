@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    undef _CRT_NONSTDC_NO_WARNINGS
 #endif
 
+// http://unixwiz.net/techtips/termios-vmin-vtime.html
+
 int seropen(char const* devstr) {
     return open(devstr, _O_RDWR /* | O_NOCTTY | O_NONBLOCK */);
 }
