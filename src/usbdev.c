@@ -59,11 +59,11 @@ devinfo[] = {
     {0x046d, 0xc603, O, "SpaceMouse Plus XT USB" ,          "",           10, {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}},  // Manual says 11 is the * reported? Buttons order? Side button names? "L" "R"?
     {0x046d, 0xc605, O, "CADman",                           "",            4, {"1", "2", "3", "4"}},  // Buttons order? Names?
     {0x046d, 0xc606, O, "SpaceMouse Classic USB",           "",            8, {"1", "2", "3", "4", "5", "6", "7", "8"}},  // Manual says 11 is the * reported?
-    {0x046d, 0xc621, O, "Spaceball 5000 USB",               "5000 USB",   12, {"1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C"}},  // Buttons order?
-    {0x046d, 0xc623, O, "SpaceTraveler",                    "",            8, {"1", "2", "3", "4", "5", "6", "7", "8"}},
-    {0x046d, 0xc625, O, "SpacePilot",                       "SP1 USB",    21, {"1", "2", "3", "4", "5", "6", "T", "L", "R", "F", "ESC", "ALT", "SHIFT", "CTRL", "FIT", "PANEL", "+", "-", "Dom", "3D Lock", "Config"}},  // IBM "(P) P/N: 60K9206", "(P) FRU P/N: 4K9204"
+    {0x046d, 0xc621, O, "Spaceball 5000 USB",               "5000 USB",   12, {"1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C"}},  // Tested working
+    {0x046d, 0xc623, O, "SpaceTraveler",                    "",            8, {"1", "2", "3", "4", "5", "6", "7", "8"}},  // Tested working
+    {0x046d, 0xc625, O, "SpacePilot",                       "SP1 USB",    21, {"1", "2", "3", "4", "5", "6", "T", "L", "R", "F", "ESC", "ALT", "SHIFT", "CTRL", "FIT", "PANEL", "+", "-", "Dom", "3D Lock", "Config"}},  // IBM "(P) P/N: 60K9206", "(P) FRU P/N: 4K9204" Tested working
     {0x046d, 0xc626, O, "SpaceNavigator",                   "3DX-700028",  2, {"MENU", "FIT"} },  // also "3DX-600027" "3DX-600028" "3DX-600029"? "SpaceNavigator USB" on the label
-    {0x046d, 0xc627, O, "SpaceExplorer",                    "3DX-700026", 15, {"1", "2", "T", "L", "R", "F", "ESC", "ALT", "SHIFT", "CTRL", "FIT", "PANEL", "+", "-", "2D"}},  // Also "3DX-600029"? "3DX-600025" both "SpaceExplorer USB" "DLZ-3DX-700026 (B)" on the other side,  "Part No. 3DX-700026" on the box
+    {0x046d, 0xc627, O, "SpaceExplorer",                    "3DX-700026", 15, {"1", "2", "T", "L", "R", "F", "ESC", "ALT", "SHIFT", "CTRL", "FIT", "PANEL", "+", "-", "2D"}},  // Also "3DX-600029"? "3DX-600025" both "SpaceExplorer USB" "DLZ-3DX-700026 (B)" on the other side,  "Part No. 3DX-700026" on the box  // Tested working
     {0x046d, 0xc628, O, "SpaceNavigator for Notebooks",     "3DX-700034",  2, {"MENU", "FIT"}},
     {0x046d, 0xc629, O, "SpacePilot Pro",                   "3DX-700036", 31,       {"MENU", "FIT", "T", "L", "R", "F", "B", "BK", "Roll +", "Roll -", "ISO1", "ISO2", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "ESC", "ALT", "SHIFT", "CTRL", "Rot", "Pan/Zoom", "Dom", "+", "-"}},
     {0x046d, 0xc62b, O, "SpaceMouse Pro",                   "3DX-700040", 27/*15*/, {"Menu", "FIT", "T",  "", "R", "F",  "",   "", "Roll +",       "",     "",     "", "1", "2", "3", "4",  "",  "",  "",  "",  "",   "", "ESC", "ALT", "SHIFT", "CTRL", "Rot"}},   // < ReportID>16  < Mask>00001000  LongPressButton_13 LongPressButton_14 LongPressButton_15 <Mask>00008000 LongPressButton_16
@@ -89,6 +89,9 @@ static void usbdev_setled(struct spndev* dev, int led);
 static int usbdev_getled(struct spndev* dev);
 static inline void usbdev_parsebuttons(const struct spndev* dev, union spndev_event* evt, const unsigned char* report);
 static inline void checkrange(const struct spndev* dev, const int val);
+static void SpacePilotLCDSetBl(struct spndev* dev, int state);
+static int SpacePilotLCDGetBl(struct spndev* dev);
+static void SpacePilotLCDWrite(struct spndev* dev, int state);
 
 #ifdef _WIN32
 #define VID_PID_FORMAT_STR "%#0.4hx:%#0.4hx"
@@ -241,6 +244,12 @@ static int usbdev_init(struct spndev* dev, const unsigned type)
     }
     dev->getled = usbdev_getled;
     dev->setled = usbdev_setled;
+    if((dev->usb_vendor == devinfo[5].vid) && (dev->usb_product == devinfo[5].pid)) {   // ToDo: The constant 4 here is an ugly hack
+        /* The device is a SpacePilot USB. Connect the LCD support functions. */
+        dev->setlcdbl = SpacePilotLCDSetBl;
+        dev->getlcdbl = SpacePilotLCDGetBl;
+        dev->writelcd = SpacePilotLCDWrite;
+    }
     return 0;
 }
 
@@ -383,6 +392,183 @@ static inline void checkrange(const struct spndev* dev, const int val) {
         fwprintf(stderr, L"Too low %i\n", val);
     }
 }
+
+/*****************************************/
+/* SpacePilot SP1 USB LCD screen support */
+/* The function names are intentionally  */
+/* in a different style.                 */
+#define SP_RPT_ID_LCD_POS 0x0c
+#define SP_RPT_ID_LCD_DATA 0x0d
+#define SP_RPT_ID_LCD_DATA_PACK 0x0e
+#define SP_RPT_ID_LCD_BACKLIGHT 0x10
+#define SP_X_RES 240u
+#define SP_Y_RES 8u // 64 rows but packed in vertical bytes
+
+/*
+ * Sets the position at which subsequent bits will be filled.
+ * Note that row is one of 8 rows of 8 bit tall columns.
+ * There is a problem if you try to start after column 120.
+ */
+static void SpacePilotLCDStartPos(struct spndev* dev, unsigned char column, unsigned char row) {
+    /* https://forum.3dconnexion.com/viewtopic.php?f=19&t=1095
+        Post by jwick » Wed Aug 29, 2007 8 : 14 am
+        Hello mew,
+
+            There was a small problem in an earlier version of the SP firmware where requests to
+        start drawing at any column after 120 resulted in starting at the next column to the right.
+        That was fixed quite a while ago.I wouldn't worry about it.
+
+        Ruevs:
+            My SpacePilot has this problem. Essentially positioning to colum 120 does not work.
+        The writing starts on column 121. It is possible to write to column 120 by starting at
+        e.g. 119 and writing a packet, which can write up to 7 columns properly.
+
+        The bug seems to come from the fact that the LCD seems to be constructed from 4 segments
+        in a 2*2 grid.
+            [         ][         ]
+            [         ][         ]
+        Column 120 is the first column of the second segments of the LCD and perhaps there is an
+        off by one error in the firmware code that handles "LCD_POS".
+        
+        If the problem is to be avoided the driver needs to know the firmware version - I do not
+        know how to read it. In addition it needs to know the version before which the problem
+        exists and apply a workaround conditionally.
+
+        Perhaps I will install an older version of the official driver and sniff the USB bus to
+        see if and how it reads the firmware version.
+    */
+    unsigned char lcd_pos_report[4];
+
+    // Set start position
+    lcd_pos_report[0] = SP_RPT_ID_LCD_POS;
+    lcd_pos_report[1] = row;           // 0-7
+    lcd_pos_report[2] = column;        // 0-239
+    lcd_pos_report[3] = 0;
+
+    // Send the buffer to the device
+    hid_send_feature_report((hid_device*)dev->handle, lcd_pos_report, 3/*sizeof(lcd_pos_report)*/);
+} 
+
+/* 
+ * Write packed data to the screen. This is faster than the "normal" writing below.
+ */
+static void SpacePilotLCDWritePacked(struct spndev* dev,
+                                     unsigned char count1, unsigned char pattern1,
+                                     unsigned char count2, unsigned char pattern2,
+                                     unsigned char count3, unsigned char pattern3) {
+    /*
+    The packed structure is a count, value structure. You can have up to 3 values that can be
+    repeated up to 255 times. Of course, there are only 240 columns per row. This can fill patterns
+    or empty space quickly. We make extensive use of this packet, testing all data to see if it is
+    more efficient to send it packed before sending it unpacked. This is the relevant data
+    structure.
+    typedef struct PackedDataState
+    {
+        int count[3]; // Count of each pattern in the data array
+        unsigned char bits[3]; // Up to 3 patterns of data bytes
+    } PackedDataState;
+
+    ruevs: The structure is not quite right. The counts and patterns are interleaved. See the code.
+    */
+    unsigned char buffer[7];
+
+    buffer[0] = SP_RPT_ID_LCD_DATA_PACK;
+    buffer[1] = count1;
+    buffer[2] = pattern1;
+    buffer[3] = count2;
+    buffer[4] = pattern2;
+    buffer[5] = count3;
+    buffer[6] = pattern3;
+    hid_send_feature_report((hid_device*)dev->handle, buffer, 7);
+}
+
+/*
+ * Fill/clear screen quickly using packed data.
+ * pattern could be different from 0x00 or 0xFF
+*/
+static void SpacePilotLCDFill(struct spndev* dev, unsigned char pattern) {
+    unsigned char row;
+    for(row = 0; row < 8; ++row) {
+        SpacePilotLCDStartPos(dev, 0, row);
+        SpacePilotLCDWritePacked(dev, SP_X_RES, pattern, 0, 0, 0, 0);
+    }
+}
+
+/*
+ * ToDo:
+ * This will be the function for writing to the LCD.
+ * Right now it is just test code to excercise the low levels.
+ * The signature will change.
+ */
+static void SpacePilotLCDWrite(struct spndev* dev, int state) {
+    unsigned char col, row;
+    unsigned char buffer[8];
+
+    SpacePilotLCDFill(dev, state);
+
+    for(row = 0; row < 8; ++row) {
+        for(col = 1; col < 240; col += 7) {
+            unsigned char c;
+            SpacePilotLCDStartPos(dev, col, row);
+
+            buffer[0] = SP_RPT_ID_LCD_DATA;
+            if(dev->led) {
+                buffer[1] = 1;
+                for(c = 1; c < 7; ++c) {
+                    buffer[c + 1] = buffer[c] | (1 << (c));
+                }
+            } else {
+                for(c = 0; c < 7; ++c) {
+                    buffer[c + 1] = col + c;
+                }
+            }
+            hid_send_feature_report((hid_device*)dev->handle, buffer, 8);
+        }
+    }
+
+    /* Test for the column 120 writing problem described in SpacePilotLCDStartPos */
+    buffer[0] = SP_RPT_ID_LCD_DATA;
+    buffer[1] = 0x80;
+    for(int c = 1; c < 7; ++c) {
+        buffer[c + 1] = buffer[c] | (0x80 >> (c));
+    }
+
+    SpacePilotLCDStartPos(dev, 119, 0);
+    hid_send_feature_report((hid_device*)dev->handle, buffer, 8);
+
+    SpacePilotLCDStartPos(dev, 120, 0);
+    hid_send_feature_report((hid_device*)dev->handle, buffer, 8);
+
+    SpacePilotLCDStartPos(dev, 121, 0);
+    hid_send_feature_report((hid_device*)dev->handle, buffer, 8);
+}
+
+/*
+ * Turn the backlight on or off.
+ */
+static void SpacePilotLCDSetBl(struct spndev* dev, int state) {
+    /* The LCD backlight packet is : 0x10, 0x02
+                buffer[0] = 0x10;
+                buffer[1] = 0x00; // On
+                buffer[1] = 0x02; // Off
+    */
+    unsigned char buffer[2];
+    buffer[0] = SP_RPT_ID_LCD_BACKLIGHT;
+    buffer[1] = (state) ? 0x00 : 0x02;
+    hid_send_feature_report((hid_device*)dev->handle, buffer, 2);
+
+    dev->lcdbl = state;
+}
+
+/*
+ * Get the backlight state.
+ */
+static int SpacePilotLCDGetBl(struct spndev* dev) {
+    return dev->lcdbl;
+} 
+
+/* SpacePilot SP1 USB LCD screen support */
+/*****************************************/
 
 #else
 

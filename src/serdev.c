@@ -124,6 +124,9 @@ int spndev_ser_open(struct spndev *dev, const char *devstr)
 	dev->read = read_dev_serial;
 	dev->setled = 0;
 	dev->getled = 0;
+	dev->setlcdbl = 0;
+	dev->getlcdbl = 0;
+	dev->writelcd = 0;
 
 	stty_save(fd, sb);
 

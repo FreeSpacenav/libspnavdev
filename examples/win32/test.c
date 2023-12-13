@@ -43,6 +43,8 @@ int main(int argc, char **argv)
 
 				if (ev.bn.press) {
 					spndev_set_led(dev, led);
+					spndev_write_lcd(dev, 0xAA);
+					spndev_set_lcd_bl(dev, led);
 					led = !led;
 				}
 

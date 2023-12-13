@@ -167,3 +167,27 @@ int spndev_get_deadzone(struct spndev *dev, int axis)
 {
 	return -1;	/* TODO */
 }
+
+int spndev_set_lcd_bl(struct spndev *dev, int bl)
+{
+    if(!dev->setlcdbl) {
+        return -1;
+    }
+    dev->setlcdbl(dev, bl);
+    return 0;
+}
+
+int spndev_get_lcd_bl(struct spndev *dev) {
+    if(!dev->getlcdbl) {
+        return 0;
+    }
+    return dev->getlcdbl(dev);
+}
+
+int spndev_write_lcd(struct spndev *dev, int state) {
+    if(!dev->writelcd) {
+        return -1;
+    }
+    dev->writelcd(dev, state);
+    return 0;
+}

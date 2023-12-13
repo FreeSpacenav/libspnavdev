@@ -37,6 +37,7 @@ struct spndev {
 	struct axisprop *aprop;
 	const char **bn_name;
 	int led;
+	int lcdbl;
 
 	void *uptr, *drvdata;
 
@@ -45,6 +46,11 @@ struct spndev {
 
 	void (*setled)(struct spndev*, int led);
 	int (*getled)(struct spndev*);
+
+	void (*setlcdbl)(struct spndev *, int bl);
+	int (*getlcdbl)(struct spndev *);
+
+	void (*writelcd)(struct spndev *, int state);
 };
 
 

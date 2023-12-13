@@ -89,6 +89,10 @@ int spndev_get_led(struct spndev *dev);
 int spndev_set_deadzone(struct spndev *dev, int axis, int dead);
 int spndev_get_deadzone(struct spndev *dev, int axis);
 
+int spndev_set_lcd_bl(struct spndev *dev, int state);
+int spndev_get_lcd_bl(struct spndev *dev);
+int spndev_write_lcd(struct spndev *dev, int state);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
